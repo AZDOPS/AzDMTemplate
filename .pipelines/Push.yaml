@@ -1,0 +1,74 @@
+# This is the push pipeline
+
+trigger: none
+
+pool: AzDM-VMSS
+
+parameters:
+- name: GitTestOutput
+  displayName: Git testoutput.
+  type: string
+  default: "false"
+  values:
+  - "true"
+  - "false"
+
+variables:
+- group: AzDM
+
+steps:
+- template: .templates/sharedSteps.yaml
+
+- task: PowerShell@2
+  displayName: Get diff
+  inputs:
+    targetType: 'inline'
+    script: |
+      $ModulePath = '$(Build.SourcesDirectory)/.module/AzDM.psm1'
+      Write-Host "Importing AzDM module from $ModulePath"
+      Import-Module $ModulePath -Verbose -Force
+      
+      if ("${{ parameters.GitTestOutput }}" -eq "true") {
+        [string[]]$gitChanges = Get-ChildItem $AZDMGlobalConfig['azdm_core']['rootfolder'] *.json -Recurse | Select-Object -ExpandProperty FullName
+      }
+      else {
+        [string[]]$gitChanges = (git diff HEAD HEAD^ --name-only) -replace '[\\\/]', [System.IO.Path]::DirectorySeparatorChar | 
+        ForEach-Object {
+          Join-Path -Path $AZDMGlobalRoot -ChildPath $_
+        } |
+        Where-Object {
+          $_.StartsWith($AZDMGlobalConfig['azdm_core']['rootfolder'])
+        }
+      }
+
+      if ($gitChanges.count -eq 0) {
+        Write-Host "No git changes in $($AZDMGlobalConfig['azdm_core']['rootfolder'])."
+      }
+      else {
+        Write-Host "$($gitChanges.count) git changes in $($AZDMGlobalConfig['azdm_core']['rootfolder'])."
+        $tmpFile = [System.IO.Path]::GetTempFileName().Replace('.tmp','.txt')
+        $gitChanges | Out-File -FilePath $tmpFile
+        Write-Host "##vso[task.setvariable variable=gitChangesFile;]$tmpFile"
+      }
+
+- task: PowerShell@2
+  displayName: Set up new resources
+  inputs:
+    targetType: 'inline'
+    script: |
+      # In order for the needed classes to exist in Ubuntu we need to import the modules manually.
+      Import-Module Microsoft.PowerShell.Utility, ADOPS
+
+      $ModulePath = '$(Build.SourcesDirectory)/.module/AzDM.psm1'
+      Write-Host "Importing AzDM module from $ModulePath"
+      Import-Module $ModulePath -Verbose -Force
+      
+      Write-Host "Connecting to Org: $(AzDMOrganizationName), TenantID: $(AzDMTenantId)"
+      Connect-ADOPS -ManagedIdentity -Organization $(AzDMOrganizationName) -TenantId $(AzDMTenantId) -SkipVerification
+
+      [string[]]$GitChanges = Get-Content $(gitChangesFile)
+      Invoke-AzDM -GitChanges $GitChanges
+    verbosePreference: 'continue'
+    debugPreference: 'continue'
+    failOnStderr: true
+    pwsh: true

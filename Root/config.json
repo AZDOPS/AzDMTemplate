@@ -1,0 +1,11 @@
+{
+    "core": {
+      "excludeProjects": []
+    },
+    "organization": {
+        "security": {},
+        "project": {},
+        "repos": {},
+        "pipelines": {}
+    }
+}
