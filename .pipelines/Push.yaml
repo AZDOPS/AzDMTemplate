@@ -1,6 +1,7 @@
 # This is the push pipeline
 
-trigger: none
+trigger: 
+- main
 
 pool: AzDM-VMSS
 
