@@ -1,3 +1,4 @@
+# Module Version: Alpha
 # This module is required to run AzDM. It sets all kinds of prereqs for the rest of the functions, and standardizes defaults for functionality.
 
 $requiredModules = @(
