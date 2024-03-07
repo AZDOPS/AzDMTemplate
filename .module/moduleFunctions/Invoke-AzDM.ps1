@@ -107,7 +107,7 @@ function Invoke-AzDM {
                 }
                 else {
                     Write-Host "Pipeline $($pipeline.Name) does not exist. Adding it to WhatIf result."
-                    $pipelineWhatIfResults += @{
+                    $pipelineWhatIfResults = @{
                         Setting = $pipeline.Name
                         AzDMConfiguredValue = 'Created'
                         AzureDevOpsValue = 'Not created'
