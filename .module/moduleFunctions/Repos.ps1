@@ -33,7 +33,13 @@ function mergeRepoSetting {
                 }
             }
             
-            $reposFolder = Join-Path -Path $pathToProject -ChildPath $projectLevelConfig['core']['reposFolder']
+            try {
+                $reposFolder = Join-Path -Path $pathToProject -ChildPath $projectLevelConfig['core']['reposFolder']
+            }
+            catch {
+                Write-Verbose 'No repos folder configured. Trying default "repos"'
+                $reposFolder = Join-Path -Path $pathToProject -ChildPath 'repos'
+            }
             $reposLevelConfigName = Join-Path -Path $reposFolder -ChildPath "$Project.repos.json"
             if (Test-Path -Path $reposLevelConfigName) {
                 $baseRepoSettings['FileList'] += $reposLevelConfigName

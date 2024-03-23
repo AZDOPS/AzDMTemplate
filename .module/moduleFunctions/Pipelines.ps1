@@ -32,7 +32,13 @@ function mergePipelineSetting {
                 }
             }
             
-            $pipelinesFolder = Join-Path -Path $pathToProject -ChildPath $projectLevelConfig['core']['pipelinesFolder']
+            try {
+                $pipelinesFolder = Join-Path -Path $pathToProject -ChildPath $projectLevelConfig['core']['pipelinesFolder']
+            }
+            catch {
+                Write-Verbose 'No pipelines folder configured. Trying default "pipelines"'
+                $pipelinesFolder = Join-Path -Path $pathToProject -ChildPath 'pipelines'
+            }
             $pipelinesLevelConfigName = Join-Path -Path $pipelinesFolder -ChildPath "$Project.pipelines.json"
             if (Test-Path -Path $pipelinesLevelConfigName) {
                 $basePipelineSettings['FileList'] += $pipelinesLevelConfigName
