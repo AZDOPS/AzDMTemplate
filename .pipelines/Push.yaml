@@ -49,16 +49,19 @@ steps:
 
       if ($gitChanges.count -eq 0) {
         Write-Host "No git changes in $($AZDMGlobalConfig['azdm_core']['rootfolder'])."
+        Write-Host "##vso[task.setvariable variable=runPushStep]false"
       }
       else {
         Write-Host "$($gitChanges.count) git changes in $($AZDMGlobalConfig['azdm_core']['rootfolder'])."
         $tmpFile = [System.IO.Path]::GetTempFileName().Replace('.tmp','.txt')
         $gitChanges | Out-File -FilePath $tmpFile
         Write-Host "##vso[task.setvariable variable=gitChangesFile;]$tmpFile"
+        Write-Host "##vso[task.setvariable variable=runPushStep]true"
       }
 
 - task: PowerShell@2
   displayName: Set up new resources
+  condition: eq(variables['runPushStep'], 'true')
   inputs:
     targetType: 'inline'
     script: |
