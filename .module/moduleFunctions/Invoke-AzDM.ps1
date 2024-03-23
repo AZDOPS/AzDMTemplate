@@ -56,7 +56,7 @@ function Invoke-AzDM {
             }
         }
         else {
-            Write-Verbose "Project $($repo.Name) has no changes." 
+            Write-Verbose "Project $($Project.Project) has no changes." 
         }
 
         # Check and update repo status
