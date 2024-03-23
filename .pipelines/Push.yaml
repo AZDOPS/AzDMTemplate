@@ -1,7 +1,12 @@
 # This is the push pipeline
 
-trigger: 
-- main
+trigger:
+  branches:
+    include:
+    - main
+  paths:
+    include:
+    - root
 
 pool: AzDM-VMSS
 
