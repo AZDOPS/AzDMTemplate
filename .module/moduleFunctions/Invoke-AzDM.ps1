@@ -83,13 +83,16 @@ function Invoke-AzDM {
                     updateRepository -RepoSetting $h     
                 }
                 else {
-                    Write-Host "Repo $($repo.Name) has changes. Adding it to WhatIf result."
-                    $existingRepo = Get-ADOPSRepository -Project $h['Project'] -Repository $h['Name']
-                    if ($null -eq $existingRepo) {
-                        # Because disabled repos arent searchable in the same way we try this before failing...
-                        $existingRepo = Get-ADOPSRepository -Project $h['Project'] | Where-Object {$_.Name -eq $h['Name']}
+                    $repoDiffs = diffCheckRepo -RepoSetting $h -existingRepo $existingRepo
+                    if (-not ($null -eq $repoDiffs)) {
+                        Write-Host "Repo $($repo.Name) has changes. Adding it to WhatIf result."
+                        $existingRepo = Get-ADOPSRepository -Project $h['Project'] -Repository $h['Name']
+                        if ($null -eq $existingRepo) {
+                            # Because disabled repos arent searchable in the same way we try this before failing...
+                            $existingRepo = Get-ADOPSRepository -Project $h['Project'] | Where-Object {$_.Name -eq $h['Name']}
+                        }
+                        $currentProjectWhatIfResults.Add("Repo - $($repo.Name)", $repoDiffs)
                     }
-                    $currentProjectWhatIfResults.Add("Repo - $($repo.Name)", (diffCheckRepo -RepoSetting $h -existingRepo $existingRepo))
                 }
             }
             else {
@@ -121,11 +124,14 @@ function Invoke-AzDM {
                     updatePipeline -PipelineSetting $p
                 }
                 else {
-                    Write-Host "Pipeline $($pipeline.Name) has changes. Adding it to WhatIf result."
-                    $existingPipeline = Get-ADOPSPipeline -Name $p['Name'] -Project $p['Project']
-                    [array]$pipelineDefinition = Get-ADOPSBuildDefinition -Project $p['Project'] -Id $($existingPipeline.id)
+                    $pipelineDiff = diffCheckPipeline -PipelineSetting $p -existingPipeline $existingPipeline -pipelineDefinition $pipelineDefinition
+                    if (-not ($null -eq $pipelineDiff)) {
+                        Write-Host "Pipeline $($pipeline.Name) has changes. Adding it to WhatIf result."
+                        $existingPipeline = Get-ADOPSPipeline -Name $p['Name'] -Project $p['Project']
+                        [array]$pipelineDefinition = Get-ADOPSBuildDefinition -Project $p['Project'] -Id $($existingPipeline.id)
 
-                    $currentProjectWhatIfResults.Add("Pipeline - $($pipeline.Name)", (diffCheckPipeline -PipelineSetting $p -existingPipeline $existingPipeline -pipelineDefinition $pipelineDefinition))
+                        $currentProjectWhatIfResults.Add("Pipeline - $($pipeline.Name)", $pipelineDiff)
+                    }
                 }
             }
             else {
