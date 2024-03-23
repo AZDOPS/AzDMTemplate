@@ -32,9 +32,7 @@ steps:
         [string[]]$gitChanges = Get-ChildItem $AZDMGlobalConfig['azdm_core']['rootfolder'] *.json -Recurse | Select-Object -ExpandProperty FullName
       }
       else {
-        $branchName = $(git rev-parse --abbrev-ref HEAD)
-        $branchPoint = $(git merge-base main $branchName)
-        [string[]]$gitChanges = (git diff HEAD..$branchPoint --name-only) -replace '[\\\/]', [System.IO.Path]::DirectorySeparatorChar | 
+        [string[]]$gitChanges = (git diff HEAD HEAD^ --name-only) -replace '[\\\/]', [System.IO.Path]::DirectorySeparatorChar | 
         ForEach-Object {
           Join-Path -Path $AZDMGlobalRoot -ChildPath $_
         } |
