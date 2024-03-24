@@ -8,7 +8,7 @@ $requiredModules = @(
     },
     @{
         Name = 'ADOPS'
-        MinimumVersion = '2.2.1'
+        MinimumVersion = '2.2.2'
     }
 )
 foreach ($m in $requiredModules) {
