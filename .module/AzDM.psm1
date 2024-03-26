@@ -25,6 +25,16 @@ $Global:AZDMModuleRoot = $PSScriptRoot
 $Global:AZDMGlobalRoot = Split-Path -Path $Global:AZDMModuleRoot
 $Global:AZDMGlobalConfig = .$Global:AZDMModuleRoot\moduleScripts\GetConfig.ps1 -SettingsFile $(Join-Path -Path $AZDMGlobalRoot -ChildPath 'settings.json')
 
+# Project defaults. Set this AsReadOnly() to prevent accidental overwrites of global defaults.
+$Global:AZDMProjectSettings = ([ordered]@{
+    Name = $Global:AZDMGlobalConfig['organization']['project']['Name'] ?? [string]::Empty
+    Description = $Global:AZDMGlobalConfig['organization']['project']['Description'] ?? [string]::Empty
+    Visibility = $Global:AZDMGlobalConfig['organization']['project']['Visibility'] ?? 'Private'
+    ProcessTypeName = $Global:AZDMGlobalConfig['organization']['project']['ProcessTypeName'] ?? 'Basic'
+    SourceControlType = $Global:AZDMGlobalConfig['organization']['project']['SourceControlType'] ?? 'Git'
+    FileList = @($AZDMGlobalConfig['azdm_core']['rootfolderconfigfile']) # This property keeps track of files involved in each project. Populated in mergeprojectSettings 
+}).AsReadOnly()
+
 ## Repo defaults. Set this AsReadOnly() to prevent accidental overwrites of global defaults.
 $Global:AZDMRepoSettings = ([ordered]@{
     Name = $Global:AZDMGlobalConfig['organization']['repos']['Name'] ?? [string]::Empty
@@ -41,20 +51,18 @@ $Global:AZDMPipelineSettings = ([ordered]@{
     Repository = $Global:AZDMGlobalConfig['organization']['pipelines']['Repository'] ?? [string]::Empty
     YamlPath = $Global:AZDMGlobalConfig['organization']['pipelines']['YamlPath'] ?? './azure-pipelines.yml'
     Project = [string]::Empty
-    FileList = @($AZDMGlobalConfig['azdm_core']['rootfolderconfigfile']) # This property keeps track of files involved in each repo. Populated in mergeRepoSettings 
+    FileList = @($AZDMGlobalConfig['azdm_core']['rootfolderconfigfile']) # This property keeps track of files involved in each pipeline. Populated in mergepipelineSettings 
     QueueStatus = 'enabled'
 }).AsReadOnly()
 
-# Project defaults. Set this AsReadOnly() to prevent accidental overwrites of global defaults.
-$Global:AZDMProjectSettings = ([ordered]@{
-    Name = $Global:AZDMGlobalConfig['organization']['project']['Name'] ?? [string]::Empty
-    Description = $Global:AZDMGlobalConfig['organization']['project']['Description'] ?? [string]::Empty
-    Visibility = $Global:AZDMGlobalConfig['organization']['project']['Visibility'] ?? 'Private'
-    ProcessTypeName = $Global:AZDMGlobalConfig['organization']['project']['ProcessTypeName'] ?? 'Basic'
-    SourceControlType = $Global:AZDMGlobalConfig['organization']['project']['SourceControlType'] ?? 'Git'
-    FileList = @($AZDMGlobalConfig['azdm_core']['rootfolderconfigfile']) # This property keeps track of files involved in each repo. Populated in mergeRepoSettings 
+# Artifacts defaults. Set this AsReadOnly() to prevent accidental overwrites of global defaults.
+$Global:AZDMArtifactsSettings = ([ordered]@{
+    Name = $Global:AZDMGlobalConfig['organization']['artifacts']['Name'] ?? [string]::Empty
+    Description = $Global:AZDMGlobalConfig['organization']['artifacts']['Description'] ?? [string]::Empty
+    IncludeUpstream = $Global:AZDMGlobalConfig['organization']['artifacts']['IncludeUpstream'] ?? $true
+    Project = [string]::Empty
+    FileList = @($AZDMGlobalConfig['azdm_core']['rootfolderconfigfile']) # This property keeps track of files involved in each artifacts feed. Populated in mergeartifactsSettings 
 }).AsReadOnly()
-
 
 # Import functions
 Get-ChildItem -Path $Global:AZDMModuleRoot\moduleFunctions -Filter *.ps1 -Recurse | ForEach-Object {
