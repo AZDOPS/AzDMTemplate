@@ -101,8 +101,12 @@ function updateArtifacts {
     $updateDiff = diffCheckArtifacts -ArtifactSetting $ArtifactSetting -ExistingArtifacts $existingArtifactsFeed
 
     if ($updateDiff.Count -ge 1) {
-        $updateParams =  matchParameter -FunctionName Set-ADOPSArtifactFeed -Hashtable $ArtifactsSetting
-
+        $updateParams =  matchParameter -FunctionName Set-ADOPSArtifactFeed -Hashtable $ArtifactSetting
+        foreach ($key in $updateDiff.Setting){
+            $val = $updateDiff.Where({$_['Setting'] -eq $key}).AzDMConfiguredValue
+            $updateParams[$key] = $val
+        }
+        
         Set-ADOPSArtifactFeed -FeedId $existingArtifactsFeed.id @updateParams
     }
 }
