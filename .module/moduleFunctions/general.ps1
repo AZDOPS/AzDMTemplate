@@ -152,11 +152,43 @@ function getProjectResources {
     }
 #endregion
 
+#region GetArtifactsSettings
+Write-Verbose "Getting project artifacts from project $Project"
+try {
+    # Get pipeline folder from config
+    $projectArtifactsFolder = Join-Path -Path $ProjectPath -ChildPath $AZDMGlobalConfig['projects'][$Project]['core']['artifactsFolder']
+}
+catch {
+    # If setting is not defined, assume artifacts folder
+    $projectArtifactsFolder = Join-Path -Path $ProjectPath -ChildPath 'artifacts'
+}
+$projectArtifactsConfigPath = Join-Path -Path $projectArtifactsFolder -ChildPath "$Project.artifacts.json"
+try {
+    [array]$projectArtifactsNames = (Get-Content -Path $projectArtifactsConfigPath | ConvertFrom-Json).'artifacts.names' 
+}
+catch {
+    # If the artifactsfile doesnt exist we will end up here.
+    [array]$projectArtifactsNames = @()
+}
+
+[array]$projectArtifacts = foreach ($a in $projectArtifactsNames) {
+    try {
+        [bool]$artifactsExists = -Not ($null -eq (Get-ADOPSArtifactFeed -Project $Project -FeedId $a))
+    }
+    catch {
+        [bool]$artifactsExists = $false
+    }
+    @{
+        Name = $a
+        Exists = $artifactsExists
+    }
+}
+#endregion
     @{
         Exists = $projectExists
         Repos = $projectRepos
         Pipelines = $projectPipelines
-        
+        Artifacts = $projectArtifacts
     }
 }
 

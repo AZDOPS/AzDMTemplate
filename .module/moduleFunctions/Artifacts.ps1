@@ -27,8 +27,8 @@ function mergeArtifactsSetting {
         else {
             if ($projectLevelConfig['project'].Keys -contains 'artifacts') {
                 foreach ($k in $projectLevelConfig['project']['artifacts'].Keys) {
-                    if ($baseArtifactsettings.Keys -contains $k) {
-                        $baseArtifactsettings[$k] = $projectLevelConfig['project']['artifacts'][$k]
+                    if ($baseArtifactsSettings.Keys -contains $k) {
+                        $baseArtifactsSettings[$k] = $projectLevelConfig['project']['artifacts'][$k]
                     }
                 }
             }
@@ -43,14 +43,14 @@ function mergeArtifactsSetting {
             $artifactsLevelConfigName = Join-Path -Path $artifactsFolder -ChildPath "$Project.artifacts.json"
             
             if (Test-Path -Path $artifactsLevelConfigName) {
-                $baseArtifactsettings['FileList'] += $artifactsLevelConfigName
+                $baseArtifactsSettings['FileList'] += $artifactsLevelConfigName
                 # we have a repo level config
                 $artifactsLevelConfig = Get-Content -Path $artifactsLevelConfigName | ConvertFrom-Json -AsHashtable
                 if ($artifactsLevelConfig.Keys -contains 'defaults') {
                     # We have a base repo config
                     foreach ($k in $artifactsLevelConfig['defaults'].Keys) {
-                        if ($baseArtifactsettings.Keys -contains $k) {
-                            $baseArtifactsettings[$k] = $artifactsLevelConfig['defaults'][$k]
+                        if ($baseArtifactsSettings.Keys -contains $k) {
+                            $baseArtifactsSettings[$k] = $artifactsLevelConfig['defaults'][$k]
                         }
                     }
                 }

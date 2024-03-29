@@ -83,14 +83,14 @@ function Invoke-AzDM {
                     updateRepository -RepoSetting $h     
                 }
                 else {
+                    Write-Host "Repo $($repo.Name) has changes. Adding it to WhatIf result."
+                    $existingRepo = Get-ADOPSRepository -Project $h['Project'] -Repository $h['Name']
+                    if ($null -eq $existingRepo) {
+                        # Because disabled repos arent searchable in the same way we try this before failing...
+                        $existingRepo = Get-ADOPSRepository -Project $h['Project'] | Where-Object {$_.Name -eq $h['Name']}
+                    }
                     $repoDiffs = diffCheckRepo -RepoSetting $h -existingRepo $existingRepo
                     if (-not ($null -eq $repoDiffs)) {
-                        Write-Host "Repo $($repo.Name) has changes. Adding it to WhatIf result."
-                        $existingRepo = Get-ADOPSRepository -Project $h['Project'] -Repository $h['Name']
-                        if ($null -eq $existingRepo) {
-                            # Because disabled repos arent searchable in the same way we try this before failing...
-                            $existingRepo = Get-ADOPSRepository -Project $h['Project'] | Where-Object {$_.Name -eq $h['Name']}
-                        }
                         $currentProjectWhatIfResults.Add("Repo - $($repo.Name)", $repoDiffs)
                     }
                 }
@@ -124,18 +124,55 @@ function Invoke-AzDM {
                     updatePipeline -PipelineSetting $p
                 }
                 else {
+                    Write-Host "Pipeline $($pipeline.Name) has changes. Adding it to WhatIf result."
+                    $existingPipeline = Get-ADOPSPipeline -Name $p['Name'] -Project $p['Project']
+                    [array]$pipelineDefinition = Get-ADOPSBuildDefinition -Project $p['Project'] -Id $($existingPipeline.id)
                     $pipelineDiff = diffCheckPipeline -PipelineSetting $p -existingPipeline $existingPipeline -pipelineDefinition $pipelineDefinition
                     if (-not ($null -eq $pipelineDiff)) {
-                        Write-Host "Pipeline $($pipeline.Name) has changes. Adding it to WhatIf result."
-                        $existingPipeline = Get-ADOPSPipeline -Name $p['Name'] -Project $p['Project']
-                        [array]$pipelineDefinition = Get-ADOPSBuildDefinition -Project $p['Project'] -Id $($existingPipeline.id)
-
                         $currentProjectWhatIfResults.Add("Pipeline - $($pipeline.Name)", $pipelineDiff)
                     }
                 }
             }
             else {
                 Write-Verbose "Pipeline $($pipeline.Name) has no changes." 
+            }
+        }
+
+        # Check and update artifacts status        
+        foreach ($artifact in $ProjectResourceTree['Artifacts']) {
+            $a = mergeArtifactsSetting -project $Project.Project -ArtifactsName $artifact.Name
+            if (-Not ($artifact.Exists)) {
+                if ($shouldDeploy) {
+                    Write-Host "Artifact $($artifact.Name) does not exist. Creating" 
+                    createArtifacts -ArtifactsSetting $a
+                }
+                else {
+                    Write-Host "Artifact $($artifact.Name) does not exist. Adding it to WhatIf result."
+                    $artifactsWhatIfResults = @{
+                        Setting = $artifact.Name
+                        AzDMConfiguredValue = 'Created'
+                        AzureDevOpsValue = 'Not created'
+                    }
+                    $currentProjectWhatIfResults.Add("Artifacts - $($artifact.Name)", $artifactsWhatIfResults)
+                }
+            }
+            elseif ( (compareChanges -OperationFileList $a.FileList -GitChanges $gitChanges ) ) {
+                if ($shouldDeploy) {
+                    Write-Host "Artifact $($artifact.Name) has changes. Updating" 
+                    updateArtifacts -ArtifactSetting $a
+                }
+                else {
+                    Write-Host "Artifact $($artifact.Name) has changes. Adding it to WhatIf result."
+                    $existingArtifactsFeed = Get-ADOPSArtifactFeed -Project $a['Project'] -FeedId $a['Name']
+                    
+                    $artifactDiff = diffCheckArtifacts -ArtifactSetting $a -ExistingArtifacts $existingArtifactsFeed 
+                    if (-not ($null -eq $artifactDiff)) {
+                        $currentProjectWhatIfResults.Add("Artifact - $($artifact.Name)", $artifactDiff)
+                    }
+                }
+            }
+            else {
+                Write-Verbose "Artifact $($artifact.Name) has no changes." 
             }
         }
 
