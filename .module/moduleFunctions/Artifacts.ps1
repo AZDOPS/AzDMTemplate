@@ -96,23 +96,14 @@ function updateArtifacts {
         [hashtable]$ArtifactSetting
     )
 
-    # TODO: Get-ADOPSArtifactFeed
-    $feedUri = "https://feeds.dev.azure.com/$((Get-ADOPSConnection).Organization)/$($Artifactsetting['Project'])/_apis/packaging/feeds/$($Artifactsetting['Name'])?api-version=7.2-preview.1"
-    $existingArtifactsFeed = Invoke-ADOPSRestMethod -Uri $feedUri
+    $existingArtifactsFeed = Get-ADOPSArtifactFeed -Project $ArtifactSetting['Project'] -FeedId $ArtifactSetting['Name']
 
     $updateDiff = diffCheckArtifacts -ArtifactSetting $ArtifactSetting -ExistingArtifacts $existingArtifactsFeed
 
     if ($updateDiff.Count -ge 1) {
-        # $updateParams =  matchParameter -FunctionName TODO: Set-ADOPSArtifactFeed  -Hashtable $ArtifactsSetting
-        $updateParams =  @{}
-        if ($updateDiff.Setting -contains 'Description') {
-            $updateParams['description'] =  ($updateDiff.Where({$_.Setting -eq 'Description'})).AzDMConfiguredValue
-        }
-        if ($updateDiff.Setting -contains 'IncludeUpstream') {
-            $updateParams['upstreamEnabled'] =  ($updateDiff.Where({$_.Setting -eq 'IncludeUpstream'})).AzDMConfiguredValue
-        }
+        $updateParams =  matchParameter -FunctionName Set-ADOPSArtifactFeed -Hashtable $ArtifactsSetting
 
-        Invoke-ADOPSRestMethod -Uri $feedUri -Method Patch -Body ($updateParams | ConvertTo-Json -Compress)
+        Set-ADOPSArtifactFeed -FeedId $existingArtifactsFeed.id @updateParams
     }
 }
 
