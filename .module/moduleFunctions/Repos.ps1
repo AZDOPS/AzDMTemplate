@@ -138,7 +138,7 @@ function diffCheckRepo {
     ## Easy settings:
     [string[]]$easySettings = 'Name', 'IsDisabled'
     foreach($setting in $easySettings) {
-        if ($RepoSetting[$setting] -ne $existingRepo.$($setting)) {
+        if (compareNullString "$($RepoSetting[$setting])" "-ne" "$($existingRepo.$($setting))") {
             $diffList += @{
                 Setting = $setting
                 AzDMConfiguredValue = $RepoSetting[$setting]
@@ -152,7 +152,7 @@ function diffCheckRepo {
         # If we use relative branch names we need to compare them to a full branch. /refs/heads/ is standard
         $RepoSetting['DefaultBranch'] = "refs/heads/$($RepoSetting['DefaultBranch'])"
     }
-    if ($RepoSetting['DefaultBranch'] -ne $existingRepo.defaultBranch) {
+    if (compareNullString "$($RepoSetting['DefaultBranch'])" "-ne" "$($existingRepo.defaultBranch)") {
         $diffList += @{
             Setting = 'DefaultBranch'
             AzDMConfiguredValue = $RepoSetting['DefaultBranch']
@@ -161,7 +161,7 @@ function diffCheckRepo {
     }
     
     ## Project
-    if ($RepoSetting['Project'] -ne $existingRepo.project.name) {
+    if (compareNullString "$($RepoSetting['Project'])" "-ne" "$($existingRepo.project.name)") {
         $diffList += @{
             Setting = 'Project'
             AzDMConfiguredValue = $RepoSetting['Project']

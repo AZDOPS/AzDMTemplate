@@ -85,12 +85,7 @@ function diffCheckProject {
     ## Easy settings:
     [string[]]$easySettings = 'Name', 'Description', 'Visibility'
     foreach($setting in $easySettings) {
-        if ( 
-            ($ProjectSetting[$setting] -ne $existingProject.$($setting)) -and 
-            (-Not
-                ([string]::IsNullOrEmpty($ProjectSetting[$setting])) -and 
-                ([string]::IsNullOrEmpty($existingProject.$($setting)))
-        )) { # If strings are not equal and not both null or empty. This is needed in order to not get $null and [string]::empty as a diff
+        if (compareNullString "$($ProjectSetting[$setting])" "-ne" "$($existingProject.$($setting))") {
             $diffList += @{
                 Setting = $setting
                 AzDMConfiguredValue = $ProjectSetting[$setting]
@@ -120,7 +115,7 @@ function diffCheckProject {
 
     ## ProcessTypeName
     $ProcessTypeName = ($aditionalDetails.Where({$_.name -eq 'System.Process Template'})).value
-    if ($ProjectSetting['ProcessTypeName'] -ne $ProcessTypeName) {
+    if (compareNullString "$($ProjectSetting['ProcessTypeName'])" "-ne" "$ProcessTypeName") {
         $diffList += @{
             Setting = 'ProcessTypeName'
             AzDMConfiguredValue = $ProjectSetting['ProcessTypeName']

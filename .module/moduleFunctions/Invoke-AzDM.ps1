@@ -41,7 +41,7 @@ function Invoke-AzDM {
                     AzDMConfiguredValue = 'Created'
                     AzureDevOpsValue = 'Not created'
                 }
-                $currentProjectWhatIfResults.Add('Project', $projectWhatIfResults)
+                $currentProjectWhatIfResults.Add('Project', [array]$projectWhatIfResults)
             }
         }
         elseif ( ( compareChanges -OperationFileList $projectSetting.FileList -GitChanges $gitChanges ) ) {
@@ -52,7 +52,7 @@ function Invoke-AzDM {
             else {
                 Write-Host "Project $($Project.Project) has changes. Adding it to WhatIf result."
                 $existingProject = Get-ADOPSProject -Name $Project.Project
-                $currentProjectWhatIfResults.Add('Project', (diffCheckProject -ProjectSetting $ProjectSetting -ExistingProject $existingProject))
+                $currentProjectWhatIfResults.Add('Project', [array](diffCheckProject -ProjectSetting $ProjectSetting -ExistingProject $existingProject))
             }
         }
         else {
@@ -74,7 +74,7 @@ function Invoke-AzDM {
                         AzDMConfiguredValue = 'Created'
                         AzureDevOpsValue = 'Not created'
                     }
-                    $currentProjectWhatIfResults.Add("Repo - $($repo.Name)", $repoWhatIfResults)
+                    $currentProjectWhatIfResults.Add("Repo - $($repo.Name)", [array]$repoWhatIfResults)
                 }
             }
             elseif ( (compareChanges -OperationFileList $h.FileList -GitChanges $gitChanges ) ) {
@@ -91,7 +91,7 @@ function Invoke-AzDM {
                     }
                     $repoDiffs = diffCheckRepo -RepoSetting $h -existingRepo $existingRepo
                     if (-not ($null -eq $repoDiffs)) {
-                        $currentProjectWhatIfResults.Add("Repo - $($repo.Name)", $repoDiffs)
+                        $currentProjectWhatIfResults.Add("Repo - $($repo.Name)", [array]$repoDiffs)
                     }
                 }
             }
@@ -115,7 +115,7 @@ function Invoke-AzDM {
                         AzDMConfiguredValue = 'Created'
                         AzureDevOpsValue = 'Not created'
                     }
-                    $currentProjectWhatIfResults.Add("Pipeline - $($pipeline.Name)", $pipelineWhatIfResults)
+                    $currentProjectWhatIfResults.Add("Pipeline - $($pipeline.Name)", [array]$pipelineWhatIfResults)
                 }
             }
             elseif ( (compareChanges -OperationFileList $p.FileList -GitChanges $gitChanges ) ) {
@@ -129,7 +129,7 @@ function Invoke-AzDM {
                     [array]$pipelineDefinition = Get-ADOPSBuildDefinition -Project $p['Project'] -Id $($existingPipeline.id)
                     $pipelineDiff = diffCheckPipeline -PipelineSetting $p -existingPipeline $existingPipeline -pipelineDefinition $pipelineDefinition
                     if (-not ($null -eq $pipelineDiff)) {
-                        $currentProjectWhatIfResults.Add("Pipeline - $($pipeline.Name)", $pipelineDiff)
+                        $currentProjectWhatIfResults.Add("Pipeline - $($pipeline.Name)", [array]$pipelineDiff)
                     }
                 }
             }
@@ -153,7 +153,7 @@ function Invoke-AzDM {
                         AzDMConfiguredValue = 'Created'
                         AzureDevOpsValue = 'Not created'
                     }
-                    $currentProjectWhatIfResults.Add("Artifacts - $($artifact.Name)", $artifactsWhatIfResults)
+                    $currentProjectWhatIfResults.Add("Artifacts - $($artifact.Name)", [array]$artifactsWhatIfResults)
                 }
             }
             elseif ( (compareChanges -OperationFileList $a.FileList -GitChanges $gitChanges ) ) {
@@ -167,7 +167,7 @@ function Invoke-AzDM {
                     
                     $artifactDiff = diffCheckArtifacts -ArtifactSetting $a -ExistingArtifacts $existingArtifactsFeed 
                     if (-not ($null -eq $artifactDiff)) {
-                        $currentProjectWhatIfResults.Add("Artifact - $($artifact.Name)", $artifactDiff)
+                        $currentProjectWhatIfResults.Add("Artifact - $($artifact.Name)", [array]$artifactDiff)
                     }
                 }
             }

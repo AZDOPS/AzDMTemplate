@@ -225,9 +225,11 @@ function formatWhatIfResults {
         foreach ($change in $result[$($result.Keys)].Keys) {
             try {
                 $outputAsString += "`t$change`r`n"
-                $outputAsString += "`t`tSetting`t`t`t- $($result[$($result.Keys)][$change]['Setting'])`r`n"
-                $outputAsString += "`t`tAzDM Configured value`t- $($result[$($result.Keys)][$change]['AzDMConfiguredValue'])`r`n"
-                $outputAsString += "`t`tAzure DevOps value`t- $($result[$($result.Keys)][$change]['AzureDevOpsValue'])`r`n"
+                foreach ($setting in $result[$($result.Keys)][$change]) {
+                    $outputAsString += "`t`tSetting`t`t`t- $($setting['Setting'])`r`n"
+                    $outputAsString += "`t`tAzDM Configured value`t- $($setting['AzDMConfiguredValue'])`r`n"
+                    $outputAsString += "`t`tAzure DevOps value`t- $($setting['AzureDevOpsValue'])`r`n"
+                }
             }
             catch {
                 $outputAsString += "`t`tFailed to parse changes. Data as Json follows`r`n"
@@ -238,4 +240,28 @@ function formatWhatIfResults {
     }
 
     $outputAsString
+}
+
+function compareNullString {
+    param(
+        $ReferenceObject,
+        $operator,
+        $DifferenceObject
+    )
+
+    if (
+        [string]::IsNullOrEmpty($ReferenceObject) -or
+        [string]::IsNullOrWhiteSpace($ReferenceObject)
+    ) {
+        $ReferenceObject = [string]::Empty
+    }
+
+    if (
+        [string]::IsNullOrEmpty($DifferenceObject) -or
+        [string]::IsNullOrWhiteSpace($DifferenceObject)
+    ) {
+        $DifferenceObject = [string]::Empty
+    }
+    
+    Invoke-Expression """$ReferenceObject"" $operator ""$DifferenceObject"""
 }

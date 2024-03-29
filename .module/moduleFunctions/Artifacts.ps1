@@ -124,7 +124,7 @@ function diffCheckArtifacts {
     ## Easy settings:
     [string[]]$easySettings = 'Name', 'Description'
     foreach($setting in $easySettings) {
-        if ($ArtifactSetting[$setting] -ne $existingArtifacts.$($setting)) {
+        if (compareNullString "$($ArtifactSetting[$setting])" "-ne" "$($existingArtifacts.$($setting))") {
             $diffList += @{
                 Setting = $setting
                 AzDMConfiguredValue = $ArtifactSetting[$setting]
@@ -134,7 +134,7 @@ function diffCheckArtifacts {
     }
 
     ## Project
-    if ($ArtifactSetting['Project'] -ne $existingArtifacts.project.name) {
+    if (compareNullString "$($ArtifactSetting['Project'])" "-ne" "$($existingArtifacts.project.name)") {
         $diffList += @{
             Setting = 'Project'
             AzDMConfiguredValue = $ArtifactSetting['Project']
@@ -143,7 +143,7 @@ function diffCheckArtifacts {
     }
 
     ## IncludeUpstream
-    if ($ArtifactSetting['IncludeUpstream'] -ne $existingArtifacts.upstreamEnabled) {
+    if (compareNullString "$($ArtifactSetting['IncludeUpstream'])" "-ne" "$($existingArtifacts.upstreamEnabled)") {
         $diffList += @{
             Setting = 'IncludeUpstream'
             AzDMConfiguredValue = $ArtifactSetting['IncludeUpstream']
