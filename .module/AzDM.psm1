@@ -1,4 +1,4 @@
-# Module Version: v0.1.0
+# Module Version: vNext-0.1.0
 # This module is required to run AzDM. It sets all kinds of prereqs for the rest of the functions, and standardizes defaults for functionality.
 
 $requiredModules = @(
