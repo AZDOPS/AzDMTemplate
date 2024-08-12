@@ -249,41 +249,13 @@ function createYamlFromTemplateFile {
         $YAMLTemplateFile = "$AZDMGlobalRoot/.templates/NewPipeline.yaml"
     )
 
-    #TODO: Eventually this should be replaced by an ADOPS function.
-    
-    # Get last commitID 
-    $refIduri = "$($Repository.url)/refs?filter=$($Repository.defaultBranch -replace '^refs/','')&includeStatuses=true&latestStatusesOnly=true&api-version=7.2-preview.2"
-    $refId = Invoke-ADOPSRestMethod $refIduri | Select-Object -ExpandProperty value
-
-    $body = @{
-        refUpdates = @(
-            @{
-                name        = $Repository.defaultBranch
-                oldObjectId = $refId.objectId
-            }
-        )
-        commits    = @(
-            @{
-                comment = "Added Pipeline Yaml from AzDM Template"
-                changes = @(
-                    @{
-                        changeType = "add"
-                        item       = @{
-                            path = $RepoSetting['YamlPath']
-                        }
-                        newContent = @{
-                            content     = $(Get-Content $YAMLTemplateFile -Raw)
-                            contentType = "rawtext"
-                        }
-                    }
-                )
-            }
-        )
-    } | ConvertTo-Json -Depth 100 -Compress
-    
-    $uri = "$($Repository.url)/pushes?api-version=7.2-preview.3"
-    
-    $method = 'post'
-    
-    Invoke-ADOPSRestMethod -Method $method -Body $body -Uri $uri
+    $gitFileSplat = @{
+        Project = $RepoSetting.Project 
+        Repository = $RepoSetting.Repository 
+        File = $YAMLTemplateFile
+        FileName = $RepoSetting['YamlPath']
+        Path = $RepoSetting['FolderPath']
+        CommitMessage = "Added Pipeline Yaml from AzDM Template"
+    }
+    New-ADOPSGitFile @gitFileSplat
 }
