@@ -32,27 +32,28 @@ steps:
         [string[]]$gitChanges = Get-ChildItem $AZDMGlobalConfig['azdm_core']['rootfolder'] *.json -Recurse | Select-Object -ExpandProperty FullName
       }
       else {
-        [string[]]$gitChanges = (git diff HEAD HEAD^ --name-only) -replace '[\\\/]', [System.IO.Path]::DirectorySeparatorChar | 
-        ForEach-Object {
-          Join-Path -Path $AZDMGlobalRoot -ChildPath $_
-        } |
-        Where-Object {
-          $_.StartsWith($AZDMGlobalConfig['azdm_core']['rootfolder'])
+        [string[]]$gitChanges = (getGitDiff | 
+          Where-Object {
+            ($_.Path.StartsWith($AZDMGlobalConfig['azdm_core']['rootfolder'])) -and
+            ($_.Type -ne 'Deleted')
+          }).path
         }
-      }
 
       if ($gitChanges.count -eq 0) {
-        Write-Host "No git changes in $($AZDMGlobalConfig['azdm_core']['rootfolder'])."
+        Write-Host "No git adds or changes in $($AZDMGlobalConfig['azdm_core']['rootfolder'])."
+        Write-Host "##vso[task.setvariable variable=PostFeedback]false"
       }
       else {
         Write-Host "$($gitChanges.count) git changes in $($AZDMGlobalConfig['azdm_core']['rootfolder'])."
         $tmpFile = [System.IO.Path]::GetTempFileName().Replace('.tmp','.txt')
         $gitChanges | Out-File -FilePath $tmpFile
         Write-Host "##vso[task.setvariable variable=gitChangesFile;]$tmpFile"
+        Write-Host "##vso[task.setvariable variable=PostFeedback]true"
       }
 
 - task: PowerShell@2
   displayName: Gather WhatIf data
+  condition: eq(variables['PostFeedback'], 'true')
   inputs:
     targetType: 'inline'
     script: |
@@ -80,6 +81,7 @@ steps:
 
 - task: PowerShell@2
   displayName: Post WhatIf feedback
+  condition: eq(variables['PostFeedback'], 'true')
   inputs:
     targetType: 'inline'
     script: |      

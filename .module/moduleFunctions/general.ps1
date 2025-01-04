@@ -23,8 +23,8 @@ function matchParameter {
             ) -or (
                 $key -eq 'IsDisabled' # Workaround to be able to support disabled params...
             ))
-        ){
-          $matchHash[$key] = $Hashtable[$key]  
+        ) {
+            $matchHash[$key] = $Hashtable[$key]  
         }
     }
 
@@ -61,9 +61,9 @@ function getProjectTree {
         $projectPath = Join-Path -Path $AZDMGlobalConfig['azdm_core']['rootfolder'] -ChildPath $k
         $configPath = Join-Path -Path $projectPath -ChildPath "$k.json"
         @{
-            Project = $k
+            Project     = $k
             ProjectPath = $projectPath
-            ConfigPath = $configPath
+            ConfigPath  = $configPath
         }
     }
     $projects
@@ -85,7 +85,7 @@ function getProjectResources {
     Write-Verbose "Getting project $Project"
     [bool]$projectExists = -Not ($null -eq (Get-ADOPSProject -Name $Project))
 
-#region GetReposSettings
+    #region GetReposSettings
     Write-Verbose "Getting project repos from project $Project"
     try {
         # Get repos folder from config
@@ -112,14 +112,14 @@ function getProjectResources {
             [bool]$repoExists = $false
         }
         @{
-            Name = $r
+            Name   = $r
             Exists = $repoExists
         }
     }
-#endregion
+    #endregion
 
 
-#region GetPipelinesSettings
+    #region GetPipelinesSettings
     Write-Verbose "Getting project pipelines from project $Project"
     try {
         # Get pipeline folder from config
@@ -146,47 +146,47 @@ function getProjectResources {
             [bool]$pipelinesExists = $false
         }
         @{
-            Name = $p
+            Name   = $p
             Exists = $pipelinesExists
         }
     }
-#endregion
+    #endregion
 
-#region GetArtifactsSettings
-Write-Verbose "Getting project artifacts from project $Project"
-try {
-    # Get pipeline folder from config
-    $projectArtifactsFolder = Join-Path -Path $ProjectPath -ChildPath $AZDMGlobalConfig['projects'][$Project]['core']['artifactsFolder']
-}
-catch {
-    # If setting is not defined, assume artifacts folder
-    $projectArtifactsFolder = Join-Path -Path $ProjectPath -ChildPath 'artifacts'
-}
-$projectArtifactsConfigPath = Join-Path -Path $projectArtifactsFolder -ChildPath "$Project.artifacts.json"
-try {
-    [array]$projectArtifactsNames = (Get-Content -Path $projectArtifactsConfigPath | ConvertFrom-Json).'artifacts.names' 
-}
-catch {
-    # If the artifactsfile doesnt exist we will end up here.
-    [array]$projectArtifactsNames = @()
-}
-
-[array]$projectArtifacts = foreach ($a in $projectArtifactsNames) {
+    #region GetArtifactsSettings
+    Write-Verbose "Getting project artifacts from project $Project"
     try {
-        [bool]$artifactsExists = -Not ($null -eq (Get-ADOPSArtifactFeed -Project $Project -FeedId $a))
+        # Get pipeline folder from config
+        $projectArtifactsFolder = Join-Path -Path $ProjectPath -ChildPath $AZDMGlobalConfig['projects'][$Project]['core']['artifactsFolder']
     }
     catch {
-        [bool]$artifactsExists = $false
+        # If setting is not defined, assume artifacts folder
+        $projectArtifactsFolder = Join-Path -Path $ProjectPath -ChildPath 'artifacts'
     }
-    @{
-        Name = $a
-        Exists = $artifactsExists
+    $projectArtifactsConfigPath = Join-Path -Path $projectArtifactsFolder -ChildPath "$Project.artifacts.json"
+    try {
+        [array]$projectArtifactsNames = (Get-Content -Path $projectArtifactsConfigPath | ConvertFrom-Json).'artifacts.names' 
     }
-}
-#endregion
+    catch {
+        # If the artifactsfile doesnt exist we will end up here.
+        [array]$projectArtifactsNames = @()
+    }
+
+    [array]$projectArtifacts = foreach ($a in $projectArtifactsNames) {
+        try {
+            [bool]$artifactsExists = -Not ($null -eq (Get-ADOPSArtifactFeed -Project $Project -FeedId $a))
+        }
+        catch {
+            [bool]$artifactsExists = $false
+        }
+        @{
+            Name   = $a
+            Exists = $artifactsExists
+        }
+    }
+    #endregion
     @{
-        Exists = $projectExists
-        Repos = $projectRepos
+        Exists    = $projectExists
+        Repos     = $projectRepos
         Pipelines = $projectPipelines
         Artifacts = $projectArtifacts
     }
@@ -264,4 +264,37 @@ function compareNullString {
     }
     
     Invoke-Expression """$ReferenceObject"" $operator ""$DifferenceObject"""
+}
+
+function getGitDiff {
+    param()
+
+    [string[]]$gitChanges = git diff HEAD^ HEAD --name-status
+    $result = foreach ($change in $gitChanges) {
+        $null = $change -match '^(?<type>\w)\s+(?<path>.*)$'
+        
+        $type = switch ($Matches['type']) {
+            'A' { 'Added' }
+            'C' { 'Copied' }
+            'D' { 'Deleted' }
+            'M' { 'Modified' }
+            'R' { 'Renamed' }
+            'T' { 'TypeChanged' }
+            'U' { 'Unmerged' }
+            'X' { 'Unknown' }
+            'B' { 'Broken' }
+        }
+
+        $Path = $Matches['path'] -replace '[\\\/]', [System.IO.Path]::DirectorySeparatorChar | 
+        ForEach-Object {
+            Join-Path -Path $AZDMGlobalRoot -ChildPath $_
+        } 
+
+        @{
+            Type = $type
+            Path = $Path
+        }
+    }
+
+    $result
 }
