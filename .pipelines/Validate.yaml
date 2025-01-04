@@ -41,6 +41,7 @@ steps:
 
       if ($gitChanges.count -eq 0) {
         Write-Host "No git adds or changes in $($AZDMGlobalConfig['azdm_core']['rootfolder'])."
+        Write-Host "Deletions are currently not supported and therefore ignored."
         Write-Host "##vso[task.setvariable variable=PostFeedback]false"
       }
       else {
