@@ -26,9 +26,10 @@ steps:
     script: |
       $ModulePath = '$(Build.SourcesDirectory)/.module/AzDM.psm1'
       Write-Host "Importing AzDM module from $ModulePath"
-      Import-Module $ModulePath -Verbose -Force
+      Import-Module $ModulePath -Force
       
-      [array]$AllTests = Get-ChildItem -Path '$(Build.SourcesDirectory)/.tests' -Filter *.Tests.ps1 -Recurse | Select-Object -ExpandProperty FullName
+      # We need the -Force flag on Get-ChildItem here because linux treats folders starting with '.' as secret and so the -Recurse will not traverse them.
+      [array]$AllTests = Get-ChildItem -Path '$(Build.SourcesDirectory)/.tests' -Filter *.Tests.ps1 -Recurse -Force | Select-Object -ExpandProperty FullName
       $PesterConfiguration = New-PesterConfiguration
       $PesterConfiguration.Output.Verbosity = 'Detailed'
       $container = New-PesterContainer -Path $AllTests
@@ -51,7 +52,7 @@ steps:
     script: |
       $ModulePath = '$(Build.SourcesDirectory)/.module/AzDM.psm1'
       Write-Host "Importing AzDM module from $ModulePath"
-      Import-Module $ModulePath -Verbose -Force
+      Import-Module $ModulePath -Force
       
       if ("${{ parameters.GitTestOutput }}" -eq "true") {
         [string[]]$gitChanges = Get-ChildItem $AZDMGlobalConfig['azdm_core']['rootfolder'] *.json -Recurse | Select-Object -ExpandProperty FullName
