@@ -20,6 +20,31 @@ steps:
 - template: .templates/sharedSteps.yaml
 
 - task: PowerShell@2
+  displayName: Run JSON file verification tests
+  inputs:
+    targetType: 'inline'
+    script: |
+      $ModulePath = '$(Build.SourcesDirectory)/.module/AzDM.psm1'
+      Write-Host "Importing AzDM module from $ModulePath"
+      Import-Module $ModulePath -Verbose -Force
+      
+      [array]$AllTests = Get-ChildItem -Path '$(Build.SourcesDirectory)/.tests' -Filter *.Tests.ps1 -Recurse | Select-Object -ExpandProperty FullName
+      $PesterConfiguration = New-PesterConfiguration
+      $PesterConfiguration.Output.Verbosity = 'Detailed'
+      $container = New-PesterContainer -Path $AllTests
+      $PesterConfiguration.Run.Container = $container
+      $PesterConfiguration.TestResult.Enabled = $true
+      Invoke-Pester -Configuration $PesterConfiguration 
+
+- task: PublishTestResults@2
+  displayName: Publish test results
+  condition: always()
+  inputs:
+    testResultsFormat: 'NUnit'
+    testResultsFiles: '**/test*.xml'
+    failTaskOnFailedTests: true
+
+- task: PowerShell@2
   displayName: Get diff
   inputs:
     targetType: 'inline'
