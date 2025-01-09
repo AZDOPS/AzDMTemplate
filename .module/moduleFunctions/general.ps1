@@ -97,7 +97,7 @@ function getProjectResources {
     }
     $projectReposConfigPath = Join-Path -Path $projectReposFolder -ChildPath "$Project.repos.json"
     try {
-        [array]$projectReposNames = (Get-Content -Path $projectReposConfigPath | ConvertFrom-Json).'repos.names' 
+        [array]$projectReposNames = (Get-Content -Path $projectReposConfigPath -ErrorAction Stop | ConvertFrom-Json).'repos.names' 
     }
     catch {
         # If the reposfile doesnt exist we will end up here.
@@ -131,7 +131,7 @@ function getProjectResources {
     }
     $projectPipelinesConfigPath = Join-Path -Path $projectPipelinesFolder -ChildPath "$Project.pipelines.json"
     try {
-        [array]$projectPipelinesNames = (Get-Content -Path $projectPipelinesConfigPath | ConvertFrom-Json).'pipelines.names' 
+        [array]$projectPipelinesNames = (Get-Content -Path $projectPipelinesConfigPath -ErrorAction Stop | ConvertFrom-Json).'pipelines.names' 
     }
     catch {
         # If the pipelinesfile doesnt exist we will end up here.
@@ -164,7 +164,7 @@ function getProjectResources {
     }
     $projectArtifactsConfigPath = Join-Path -Path $projectArtifactsFolder -ChildPath "$Project.artifacts.json"
     try {
-        [array]$projectArtifactsNames = (Get-Content -Path $projectArtifactsConfigPath | ConvertFrom-Json).'artifacts.names' 
+        [array]$projectArtifactsNames = (Get-Content -Path $projectArtifactsConfigPath -ErrorAction Stop | ConvertFrom-Json).'artifacts.names' 
     }
     catch {
         # If the artifactsfile doesnt exist we will end up here.
