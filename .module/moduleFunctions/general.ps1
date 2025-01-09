@@ -221,22 +221,32 @@ function formatWhatIfResults {
     $outputAsString = [string]::Empty
 
     foreach ($result in $WhatIfResults) {
-        $outputAsString += "-----------------`r`n$($result.Keys)`r`n-----------------`r`n"
-        foreach ($change in $result[$($result.Keys)].Keys) {
+        $outputAsString += "## Project $($result.Keys)`r`n`r`n"
+        
+        $outputAsString += "| Setting Type | Name | Setting | Azure DevOps Value | AzDM Configured value |`r`n"
+        $outputAsString += "| --- | --- | --- | --- | --- |`r`n"
+
+        foreach ($change in $result[$($result.Keys)].Keys.Where({$_ -like "Project*"})) {
+            # We always want project settings on top..
             try {
-                $outputAsString += "`t$change`r`n"
-                foreach ($setting in $result[$($result.Keys)][$change]) {
-                    $outputAsString += "`t`tSetting`t`t`t- $($setting['Setting'])`r`n"
-                    $outputAsString += "`t`tAzDM Configured value`t- $($setting['AzDMConfiguredValue'])`r`n"
-                    $outputAsString += "`t`tAzure DevOps value`t- $($setting['AzureDevOpsValue'])`r`n"
-                }
+                $outputAsString += "| $($change.split('§')[0]) | $($change.split('§')[1]) | $($result[$($result.Keys)][$change].Setting) | $($result[$($result.Keys)][$change].AzureDevOpsValue) | $($result[$($result.Keys)][$change].AzDMConfiguredValue) |`r`n"
             }
             catch {
                 $outputAsString += "`t`tFailed to parse changes. Data as Json follows`r`n"
                 $outputAsString += "`t`t$change`r`n`t`t$($result[$($result.Keys)][$change] | ConvertTo-Json -Depth 10)`r`n"
             }
         }
-        $outputAsString += "-----------------`r`n`r`n`r`n"
+
+        foreach ($change in @($result[$($result.Keys)].Keys.Where({$_ -notlike "Project*"}) | Sort-Object)) {
+            try {
+                $outputAsString += "| $($change.split('§')[0]) | $($change.split('§')[1]) | $($result[$($result.Keys)][$change].Setting) | $($result[$($result.Keys)][$change].AzureDevOpsValue) | $($result[$($result.Keys)][$change].AzDMConfiguredValue) |`r`n"
+            }
+            catch {
+                $outputAsString += "`t`tFailed to parse changes. Data as Json follows`r`n"
+                $outputAsString += "`t`t$change`r`n`t`t$($result[$($result.Keys)][$change] | ConvertTo-Json -Depth 10)`r`n"
+            }
+        }
+        $outputAsString += "`r`n---`r`n`r`n"
     }
 
     $outputAsString
