@@ -151,14 +151,15 @@ function diffCheckPipeline {
     param(
         [hashtable]$PipelineSetting,
         $existingPipeline,
-        $pipelineDefinition
+        $pipelineDefinition,
+        [switch]$IncludeEqual
     )
 
     [array]$diffList = @()
 
     # Unfortunately there is no easy way to compare this. For now, lets do it manually.
     ## Project
-    if (compareNullString "$($PipelineSetting['Project'])" "-ne" "$($pipelineDefinition.project.name)") {
+    if ((compareNullString "$($PipelineSetting['Project'])" "-ne" "$($pipelineDefinition.project.name)") -or ($IncludeEqual)) {
         $diffList += @{
             Setting = 'Project'
             AzDMConfiguredValue = $PipelineSetting['Project']
@@ -166,7 +167,7 @@ function diffCheckPipeline {
         }
     }
     ## QueueStatus
-    if (compareNullString "$($PipelineSetting['QueueStatus'])" "-ne" "$($pipelineDefinition.QueueStatus)") {
+    if ((compareNullString "$($PipelineSetting['QueueStatus'])" "-ne" "$($pipelineDefinition.QueueStatus)") -or ($IncludeEqual)) {
         $diffList += @{
             Setting = 'QueueStatus'
             AzDMConfiguredValue = $PipelineSetting['QueueStatus']
@@ -174,7 +175,7 @@ function diffCheckPipeline {
         }
     }
     ## YamlPath
-    if (compareNullString "$($PipelineSetting['YamlPath'].TrimStart('.\/'))" "-ne" "$($existingPipeline.configuration.path)") {
+    if ((compareNullString "$($PipelineSetting['YamlPath'].TrimStart('.\/'))" "-ne" "$($existingPipeline.configuration.path)") -or ($IncludeEqual)) {
         $diffList += @{
             Setting = 'YamlPath'
             AzDMConfiguredValue = $PipelineSetting['YamlPath'].TrimStart('.\/')
@@ -182,7 +183,7 @@ function diffCheckPipeline {
         }
     }
     ## Repository
-    if (compareNullString "$($PipelineSetting['Repository'])" "-ne" "$($pipelineDefinition.repository.name)") {
+    if ((compareNullString "$($PipelineSetting['Repository'])" "-ne" "$($pipelineDefinition.repository.name)") -or ($IncludeEqual)) {
         $diffList += @{
             Setting = 'Repository'
             AzDMConfiguredValue = $PipelineSetting['Repository']
@@ -190,7 +191,7 @@ function diffCheckPipeline {
         }
     }
     ## Name
-    if (compareNullString "$($PipelineSetting['Name'])" "-ne" "$($existingPipeline.name)") {
+    if ((compareNullString "$($PipelineSetting['Name'])" "-ne" "$($existingPipeline.name)") -or ($IncludeEqual)) {
         $diffList += @{
             Setting = 'Name'
             AzDMConfiguredValue = $PipelineSetting['Name']
@@ -198,7 +199,7 @@ function diffCheckPipeline {
         }
     }
     ## FolderPath. Since this setting depends on runner and platform, use some replace to get them correct.
-    if (compareNullString "$($PipelineSetting['FolderPath'] -replace '[\\\/]', [System.IO.Path]::DirectorySeparatorChar)" "-ne" "$($existingPipeline.folder -replace '[\\\/]', [System.IO.Path]::DirectorySeparatorChar)") {
+    if ((compareNullString "$($PipelineSetting['FolderPath'] -replace '[\\\/]', [System.IO.Path]::DirectorySeparatorChar)" "-ne" "$($existingPipeline.folder -replace '[\\\/]', [System.IO.Path]::DirectorySeparatorChar)") -or ($IncludeEqual)) {
         $diffList += @{
             Setting = 'FolderPath'
             AzDMConfiguredValue = $PipelineSetting['FolderPath']

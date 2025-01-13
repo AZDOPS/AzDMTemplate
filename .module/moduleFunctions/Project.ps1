@@ -76,7 +76,8 @@ function diffCheckProject {
     [CmdletBinding()]
     param(
         [hashtable]$ProjectSetting,
-        $ExistingProject
+        $ExistingProject,
+        [switch]$IncludeEqual
     )
 
     [array]$diffList = @()
@@ -85,7 +86,7 @@ function diffCheckProject {
     ## Easy settings:
     [string[]]$easySettings = 'Name', 'Description', 'Visibility'
     foreach($setting in $easySettings) {
-        if (compareNullString "$($ProjectSetting[$setting])" "-ne" "$($existingProject.$($setting))") {
+        if ((compareNullString "$($ProjectSetting[$setting])" "-ne" "$($existingProject.$($setting))") -or ($IncludeEqual)) {
             $diffList += @{
                 Setting = $setting
                 AzDMConfiguredValue = $ProjectSetting[$setting]
@@ -105,7 +106,7 @@ function diffCheckProject {
     else {
         $SourceControlType = 'Git'
     }
-    if ($ProjectSetting['SourceControlType'].ToLower() -ne $SourceControlType.ToLower()) {
+    if (($ProjectSetting['SourceControlType'].ToLower() -ne $SourceControlType.ToLower()) -or ($IncludeEqual)) {
         $diffList += @{
             Setting = 'SourceControlType'
             AzDMConfiguredValue = $ProjectSetting['SourceControlType']
@@ -115,7 +116,7 @@ function diffCheckProject {
 
     ## ProcessTypeName
     $ProcessTypeName = ($aditionalDetails.Where({$_.name -eq 'System.Process Template'})).value
-    if (compareNullString "$($ProjectSetting['ProcessTypeName'])" "-ne" "$ProcessTypeName") {
+    if ((compareNullString "$($ProjectSetting['ProcessTypeName'])" "-ne" "$ProcessTypeName") -or ($IncludeEqual)) {
         $diffList += @{
             Setting = 'ProcessTypeName'
             AzDMConfiguredValue = $ProjectSetting['ProcessTypeName']

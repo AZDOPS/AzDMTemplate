@@ -223,27 +223,31 @@ function formatWhatIfResults {
     foreach ($result in $WhatIfResults) {
         $outputAsString += "## Project $($result.Keys)`r`n`r`n"
         
-        $outputAsString += "| Setting Type | Name | Setting | Azure DevOps Value | AzDM Configured value |`r`n"
-        $outputAsString += "| --- | --- | --- | --- | --- |`r`n"
+        $outputAsString += "| Setting Type | Name | Setting | Azure DevOps Value | AzDM Configured value | Is different |`r`n"
+        $outputAsString += "| --- | --- | --- | --- | --- | --- |`r`n"
 
         foreach ($change in $result[$($result.Keys)].Keys.Where({$_ -like "Project*"})) {
             # We always want project settings on top..
-            try {
-                $outputAsString += "| $($change.split('§')[0]) | $($change.split('§')[1]) | $($result[$($result.Keys)][$change].Setting) | $($result[$($result.Keys)][$change].AzureDevOpsValue) | $($result[$($result.Keys)][$change].AzDMConfiguredValue) |`r`n"
-            }
-            catch {
-                $outputAsString += "`t`tFailed to parse changes. Data as Json follows`r`n"
-                $outputAsString += "`t`t$change`r`n`t`t$($result[$($result.Keys)][$change] | ConvertTo-Json -Depth 10)`r`n"
+            foreach ($c in @($result[$($result.Keys)][$change])) {
+                try {
+                    $outputAsString += "| $($change.split('§')[0]) | $($change.split('§')[1]) | $($c.Setting) | $($c.AzureDevOpsValue) | $($c.AzDMConfiguredValue) | $(-not ($c.AzureDevOpsValue -eq $c.AzDMConfiguredValue)) |`r`n"
+                }
+                catch {
+                    $outputAsString += "`t`tFailed to parse changes. Data as Json follows`r`n"
+                    $outputAsString += "`t`t$change`r`n`t`t$($c | ConvertTo-Json -Depth 10)`r`n"
+                }
             }
         }
 
-        foreach ($change in @($result[$($result.Keys)].Keys.Where({$_ -notlike "Project*"}) | Sort-Object)) {
-            try {
-                $outputAsString += "| $($change.split('§')[0]) | $($change.split('§')[1]) | $($result[$($result.Keys)][$change].Setting) | $($result[$($result.Keys)][$change].AzureDevOpsValue) | $($result[$($result.Keys)][$change].AzDMConfiguredValue) |`r`n"
-            }
-            catch {
-                $outputAsString += "`t`tFailed to parse changes. Data as Json follows`r`n"
-                $outputAsString += "`t`t$change`r`n`t`t$($result[$($result.Keys)][$change] | ConvertTo-Json -Depth 10)`r`n"
+        foreach ($change in @($result[$($result.Keys)].Keys.Where({$_ -notlike "Project*"}) | Sort-Object)) { 
+            foreach ($c in @($result[$($result.Keys)][$change])) {
+                try {
+                    $outputAsString += "| $($change.split('§')[0]) | $($change.split('§')[1]) | $($c.Setting) | $($c.AzureDevOpsValue) | $($c.AzDMConfiguredValue) | $(-not ($c.AzureDevOpsValue -eq $c.AzDMConfiguredValue)) |`r`n"
+                }
+                catch {
+                    $outputAsString += "`t`tFailed to parse changes. Data as Json follows`r`n"
+                    $outputAsString += "`t`t$change`r`n`t`t$($c | ConvertTo-Json -Depth 10)`r`n"
+                }
             }
         }
         $outputAsString += "`r`n---`r`n`r`n"

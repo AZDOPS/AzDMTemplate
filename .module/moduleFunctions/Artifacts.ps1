@@ -115,7 +115,8 @@ function diffCheckArtifacts {
     [CmdletBinding()]
     param(
         [hashtable]$ArtifactSetting,
-        $existingArtifacts
+        $existingArtifacts,
+        [switch]$IncludeEqual
     )
 
     [array]$diffList = @()
@@ -124,7 +125,7 @@ function diffCheckArtifacts {
     ## Easy settings:
     [string[]]$easySettings = 'Name', 'Description'
     foreach($setting in $easySettings) {
-        if (compareNullString "$($ArtifactSetting[$setting])" "-ne" "$($existingArtifacts.$($setting))") {
+        if ((compareNullString "$($ArtifactSetting[$setting])" "-ne" "$($existingArtifacts.$($setting))") -or ($IncludeEqual)) {
             $diffList += @{
                 Setting = $setting
                 AzDMConfiguredValue = $ArtifactSetting[$setting]
@@ -134,7 +135,7 @@ function diffCheckArtifacts {
     }
 
     ## Project
-    if (compareNullString "$($ArtifactSetting['Project'])" "-ne" "$($existingArtifacts.project.name)") {
+    if ((compareNullString "$($ArtifactSetting['Project'])" "-ne" "$($existingArtifacts.project.name)") -or ($IncludeEqual)) {
         $diffList += @{
             Setting = 'Project'
             AzDMConfiguredValue = $ArtifactSetting['Project']
@@ -143,7 +144,7 @@ function diffCheckArtifacts {
     }
 
     ## IncludeUpstream
-    if (compareNullString "$($ArtifactSetting['IncludeUpstream'])" "-ne" "$($existingArtifacts.upstreamEnabled)") {
+    if ((compareNullString "$($ArtifactSetting['IncludeUpstream'])" "-ne" "$($existingArtifacts.upstreamEnabled)") -or ($IncludeEqual)) {
         $diffList += @{
             Setting = 'IncludeUpstream'
             AzDMConfiguredValue = $ArtifactSetting['IncludeUpstream']
