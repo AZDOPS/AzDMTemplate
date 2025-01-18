@@ -221,7 +221,7 @@ function formatWhatIfResults {
     $outputAsString = [string]::Empty
 
     foreach ($result in $WhatIfResults) {
-        $outputAsString += "## Project $($result.Keys)`r`n`r`n"
+        $outputAsString += "## $($result.Keys)`r`n`r`n"
         
         $outputAsString += "| Setting Type | Name | Setting | Azure DevOps Value | AzDM Configured value | Is different |`r`n"
         $outputAsString += "| --- | --- | --- | --- | --- | --- |`r`n"
